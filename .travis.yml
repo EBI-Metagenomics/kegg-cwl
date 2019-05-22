@@ -12,7 +12,7 @@ install:
 
 script:
   - source $TRAVIS_BUILD_DIR/venv/bin/activate;
-  - cwltest --test $TRAVIS_BUILD_DIR/hmm_db/test/cwl/test_hmm_workflow.yml  --verbose
+  - cwltest --test $TRAVIS_BUILD_DIR/hmm_db/tests/cwl/test_hmm_workflow.yml  --verbose
 
 deploy:
   provider: script

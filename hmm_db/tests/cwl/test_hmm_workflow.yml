@@ -1,5 +1,5 @@
-- job: test/cwl/input.yml
-  tool: cwl/workflows/ko_hmm_workflow.cwl
+- job: hmm_db/tests/cwl/input.yml
+  tool: hmm_db/cwl/workflows/ko_hmm_workflow.cwl
   output:
     hmm_db_h3f:
       basename: merged.hmm.h3f
