@@ -29,12 +29,20 @@ outputs:
   hmm_db_h3p:
     type: File
     outputSource: hmmpress/hmmdb_h3p
+
 steps:
+  unpack_args:
+    in:
+      kegg_orthologs: ko_s
+    out:
+      - kegg_orthologs_clean
+    run: ../tools/unpack_args.cwl
+
   ko2hmm:
     scatter: kegg_ortholog
     in:
       kegg_ortholog:
-        source: ko_s
+        source: unpack_args/kegg_orthologs_clean
     out:
       - kegg_hmm
     run: ../tools/ko_hmm.cwl
