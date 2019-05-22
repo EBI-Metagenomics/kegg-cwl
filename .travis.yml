@@ -1,0 +1,24 @@
+os:
+  - linux
+  - osx
+
+services:
+  - docker
+
+language: python
+python: 3.6
+
+install:
+  - bash $TRAVIS_BUILD_DIR/hmm_db/setup.sh
+  - docker build -t mgnify/kegg2hmm $TRAVIS_BUILD_DIR/hmm_db/container
+
+script:
+  - source $TRAVIS_BUILD_DIR/venv/bin/activate;
+  - cwltest --test $TRAVIS_BUILD_DIR/hmm_db/test/cwl/test_hmm_workflow.yml  --verbose
+
+deploy:
+  provider: script
+  script: bash $TRAVOS_BUILD_DIR/hmm_db/docker_push.sh
+  on:
+    branch: master
+    os: linux

@@ -1,0 +1,33 @@
+- job: test/cwl/input.yml
+  tool: cwl/workflows/ko_hmm_workflow.cwl
+  output:
+    hmm_db_h3f:
+      basename: merged.hmm.h3f
+      class: File
+      checksum: sha1$b9593b6584778d970978c6dc8153fd7801fbac76
+      size: 56020
+    hmm_db_h3i:
+      basename: merged.hmm.h3i
+      class: File
+      checksum: sha1$1c94dfc36bfae497adca69e021d7f605029db31f
+      size: 219
+    hmm_db_h3m:
+      basename: merged.hmm.h3m
+      class: File
+      size: 131795
+    hmm_db_h3p:
+      basename: merged.hmm.h3p
+      class: File
+      checksum: sha1$bbd217eac5d2557579378d8dea92c6fe38798612
+      size: 155234
+    ko_hmms:
+    - basename: K00001.kegg_muscle_aligned.hmm
+      class: File
+      size: 169410
+    - basename: K00002.kegg_muscle_aligned.hmm
+      class: File
+      size: 148490
+    merged_hmm:
+      basename: merged.hmm
+      class: File
+      size: 317900
