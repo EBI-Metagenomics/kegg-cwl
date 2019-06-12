@@ -4,13 +4,17 @@ class: CommandLineTool
 
 label: "Combine hmm files"
 
-baseCommand: [ 'cat' ]
+requirements:
+  InlineJavascriptRequirement: {}
+  DockerRequirement:
+    dockerPull: "mgnify/kegg2hmm"
+  ShellCommandRequirement: {}
+
+baseCommand: [ 'find', '/var/lib/cwl/', '-type', 'f', '-name', '*aligned.hmm', '-exec', 'cat', '{}', '\;']
 
 inputs:
   hmm_profiles:
     type: File[]
-    inputBinding:
-      position: 1
 
 outputs:
   merged_hmm:

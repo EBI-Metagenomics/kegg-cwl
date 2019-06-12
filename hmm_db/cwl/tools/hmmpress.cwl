@@ -14,6 +14,9 @@ requirements:
 
 baseCommand: [ 'hmmpress' ]
 
+stdout: stdout.txt
+stderr: stderr.txt
+
 inputs:
   hmm_file:
     type: File

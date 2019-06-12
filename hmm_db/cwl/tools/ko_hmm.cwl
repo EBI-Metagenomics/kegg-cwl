@@ -18,6 +18,8 @@ requirements:
 
 baseCommand: [ 'make', '-f' ,'/ko2fasta/Makefile' ]
 
+stdout: stdout.txt
+stderr: stderr.txt
 
 inputs:
   kegg_ortholog:
