@@ -164,7 +164,7 @@ def recursive_parsing(G, dict_edges, unnecessary_nodes, expression, start_node, 
         field = separators_order[0]
         symbol = field.split('_')[1]
 
-        if symbol == '+':
+        if symbol == '+' or symbol == ' ':
             cur_weight = cur_weight/(len(cur_dict_levels[field])+1)
 
         separators = list(np.array(sorted(cur_dict_levels[field])))
