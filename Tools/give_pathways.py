@@ -1,13 +1,12 @@
-import os
-import numpy as np
+#!/usr/bin/env python3
+
 import argparse
 import sys
-import pdb
 import pickle
 import networkx as nx
 
 
-def download_pathways(outdir):
+def download_pathways(path_to_graphs, path_to_graphs_names, path_to_graphs_classes):
     """
     Function loads dict of graph that was saved by docker container to graphs.pickle
     :param outdir: path to file with graphs
@@ -15,19 +14,19 @@ def download_pathways(outdir):
              dict of names of pathways
              dict of classes of pathways
     """
-    path_to_graphs = os.path.join(outdir, "graphs.pkl")
+    #path_to_graphs = os.path.join(outdir, "graphs.pkl")
     graph_file = open(path_to_graphs, 'rb')
     graphs = pickle.load(graph_file)
 
     pathway_names = {}
-    path_to_graphs_names = os.path.join(outdir, "pathways/all_pathways_names.txt")
+    #path_to_graphs_names = os.path.join(outdir, "pathways/all_pathways_names.txt")
     with open(path_to_graphs_names, 'r') as file_names:
         for line in file_names:
             line = line.strip().split(':')
             pathway_names[line[0]] = line[1]
 
     pathway_classes = {}
-    path_to_graphs_classes = os.path.join(outdir, "pathways/all_pathways_class.txt")
+    #path_to_graphs_classes = os.path.join(outdir, "pathways/all_pathways_class.txt")
     with open(path_to_graphs_classes, 'r') as file_classes:
         for line in file_classes:
             line = line.strip().split(':')
@@ -52,7 +51,7 @@ def get_list_items(input_path):
                 dict_KO_by_contigs[name] = []
             dict_KO_by_contigs[name] += line[1:]
             items += line[1:]
-    return list(np.unique(items)), dict_KO_by_contigs
+    return list(set(items)), dict_KO_by_contigs
 
 
 def intersection(lst1, lst2):
@@ -155,7 +154,7 @@ def calculate_percentage(graph, dict_edges, unnecessary_nodes, edges, name_pathw
 
             missing_labels = set(new_labels).difference(set(edges))
             missing_set = missing_set.union(missing_labels)
-            print(name_pathway, unnecessary_nodes)
+            #print(name_pathway, unnecessary_nodes)
             missing_set_necessary = missing_set.difference(set(unnecessary_nodes))
 
             existing_labels = set(new_labels).intersection(set(edges))
@@ -172,24 +171,16 @@ def calculate_percentage(graph, dict_edges, unnecessary_nodes, edges, name_pathw
         #print('Percentage = ' + str(percentage))
 
 
-def sort_out_pathways(graphs, edges, pathway_names, pathway_classes, outdir):
+def sort_out_pathways(graphs, edges, pathway_names, pathway_classes,
+                      contig_name, file_out_summary):
     """
     Function sorts out all pathways and prints info about pathway that percentage of intersection more than 0
     :param graphs: Dict of graphs
     :param edges: list of items to intersect with pathways
+    :param contig_name == name of contig, or '' for full summary
     :return: -
     """
     flag_not_empty = False
-    if not os.path.exists("Contigs"): os.mkdir("Contigs")
-    if outdir != '':
-        os.mkdir(os.path.join("Contigs", outdir))
-        name_output_summary = os.path.join("Contigs", outdir, 'summary_pathways.txt')
-        name_output_matching = os.path.join("Contigs", outdir, 'matching_ko_pathways.txt')
-        name_output_missing = os.path.join("Contigs", outdir, 'missing_ko_pathways.txt')
-    else:
-        name_output_summary = 'summary_pathways.txt'
-        name_output_matching = 'matching_ko_pathways.txt'
-        name_output_missing = 'missing_ko_pathways.txt'
 
     dict_sort_by_percentage = {}
     for name_pathway in graphs:
@@ -203,96 +194,70 @@ def sort_out_pathways(graphs, edges, pathway_names, pathway_classes, outdir):
                 if percentage not in dict_sort_by_percentage:
                     dict_sort_by_percentage[percentage] = {}
                 dict_sort_by_percentage[percentage][name_pathway] = [kol_paths, matching_labels, missing_labels]
+
     # output Summary
-    with open(name_output_summary, 'w') as file_out_summary:
-        file_out_summary.write('\t'.join(['Module_accession', '% completeness', 'pathway_name', 'pathway_class'])+'\n')
-        for percentage in sorted(list(dict_sort_by_percentage.keys()), reverse=True):
-            #file_out_summary.write('**********************************************\nPercentage = ' + str(percentage) + '\n')
-            for name_pathway in dict_sort_by_percentage[percentage]:
-                flag_not_empty = True
-                output_line = '\t'.join([name_pathway, str(percentage), pathway_names[name_pathway],
-                                        pathway_classes[name_pathway]])
-                file_out_summary.write(output_line + '\n')
-        """
-        file_out_summary.write('\n******* REMINDER ********')
-        file_out_summary.write('Number of nodes: ' + str(len(edges)) + '\n')
-        file_out_summary.write('Set of nodes: ' + str(edges) + '\n')
-        """
-
-    # output matching KOs
-    with open(name_output_matching, 'w') as file_out_matching:
-        file_out_matching.write('\t'.join(['Module_accession', '% completeness', '#matching_KO', 'list_matching_KO'])+'\n')
-        for percentage in sorted(list(dict_sort_by_percentage.keys()), reverse=True):
-            for name_pathway in dict_sort_by_percentage[percentage]:
-                flag_not_empty = True
-                matching_current = dict_sort_by_percentage[percentage][name_pathway][1]
-                output_line = '\t'.join([name_pathway, str(percentage), str(len(matching_current)),
-                                        ', '.join(matching_current)])
-                file_out_matching.write(output_line + '\n')
-
-    # output missing KOs
-    with open(name_output_missing, 'w') as file_out_missing:
-        file_out_missing.write('\t'.join(['Module_accession', '% completeness', '#missing_KO', 'list_missing_KO'])+'\n')
-        for percentage in sorted(list(dict_sort_by_percentage.keys()), reverse=True):
-            for name_pathway in dict_sort_by_percentage[percentage]:
-                missing_current = dict_sort_by_percentage[percentage][name_pathway][2]
-                if len(missing_current) == 0:
-                    continue
-                flag_not_empty = True
-                output_line = '\t'.join([name_pathway, str(percentage), str(len(missing_current)),
-                                         ', '.join(missing_current)])
-                file_out_missing.write(output_line + '\n')
-
-    if outdir != '':  # Contigs folder
-        if not flag_not_empty:
-            full_path = os.path.join("Contigs", outdir)
-            files = os.listdir(full_path)
-            for file in files:
-                os.remove(os.path.join(full_path, file))
-            os.rmdir(full_path)
-
-
-def sort_out_pathways_contig(graphs, edges, pathway_names, pathway_classes, outdir):
+    for percentage in sorted(list(dict_sort_by_percentage.keys()), reverse=True):
+        #file_out_summary.write('**********************************************\nPercentage = ' + str(percentage) + '\n')
+        for name_pathway in dict_sort_by_percentage[percentage]:
+            #flag_not_empty = True
+            matching_current = ','.join(dict_sort_by_percentage[percentage][name_pathway][1])
+            missing_current = ','.join(dict_sort_by_percentage[percentage][name_pathway][2])
+            if contig_name != '':
+                out_name_pathway = '\t'.join([contig_name, name_pathway])
+            else:
+                out_name_pathway = name_pathway
+            output_line = '\t'.join([out_name_pathway, str(percentage), pathway_names[name_pathway],
+                                    pathway_classes[name_pathway], matching_current, missing_current])
+            file_out_summary.write(output_line + '\n')
     """
-    Function sorts out all pathways and prints info about pathway that percentage of intersection more than 0
-    :param graphs: Dict of graphs
-    :param edges: list of items to intersect with pathways
-    :return: -
+    file_out_summary.write('\n******* REMINDER ********')
+    file_out_summary.write('Number of nodes: ' + str(len(edges)) + '\n')
+    file_out_summary.write('Set of nodes: ' + str(edges) + '\n')
     """
-    name_output_summary = os.path.join('summary_pathways.txt')
-    name_output_matching = os.path.join('matching_ko_pathways.txt')
-    name_output_missing = os.path.join('missing_ko_pathways.txt')
 
-    dict_sort_by_percentage = {}
-    for name_pathway in graphs:
-        graph = graphs[name_pathway]
-        if intersection(graph[1], edges) == []:
-            continue
-        else:
-            percentage, kol_paths, matching_labels, missing_labels = \
-                calculate_percentage(graph[0], graph[1], graph[2], edges, name_pathway)
-            if percentage != None:
-                if percentage not in dict_sort_by_percentage:
-                    dict_sort_by_percentage[percentage] = {}
-                dict_sort_by_percentage[percentage][name_pathway] = [kol_paths, matching_labels, missing_labels]
+
+def set_headers(file_summary, contig):
+    summary_header = '\t'.join(['module_accession', 'completeness', 'pathway_name',
+                                          'pathway_class', 'matching_ko', 'missing_ko'])
+    #matching_header = '\t'.join(['module_accession', 'completeness', 'number_matching_KO', 'list_matching_ko'])
+    #missing_header = '\t'.join(['module_accession', 'completeness', 'number_missing_KO', 'list_missing_ko'])
+    if contig:
+        summary_header = 'contig\t' + summary_header
+    file_summary.write(summary_header + '\n')
 
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Generates Graphs for each contig")
     parser.add_argument("-i", "--input", dest="input_file", help="Each line = pathway", required=True)
-    parser.add_argument("-o", "--outdir", dest="outdir",
-                        help="Relative path to directory where you want the output file to be stored (default: cwd)",
-                        default=".")
+
+    parser.add_argument("-g", "--graphs", dest="graphs", help="graphs in pickle format", required=True)
+    parser.add_argument("-n", "--names", dest="names", help="Pathway names", required=True)
+    parser.add_argument("-c", "--classes", dest="classes", help="Pathway classes", required=True)
+
+    parser.add_argument("-o", "--outname", dest="outname", help="first part of ouput name", default="summary.kegg")
 
     if len(sys.argv) == 1:
         parser.print_help()
     else:
         args = parser.parse_args()
-        graphs, pathway_names, pathway_classes = download_pathways(args.outdir)
+        graphs, pathway_names, pathway_classes = download_pathways(args.graphs, args.names, args.classes)
         edges, dict_KO_by_contigs = get_list_items(args.input_file)
-        sort_out_pathways(graphs, edges, pathway_names, pathway_classes, '')
+        name_output = args.outname + '.summary.kegg'
 
-        # by contigs
+        # COMMON INFO
+        name_output_summary = name_output + '_pathways.tsv'
+        file_out_summary = open(name_output_summary, "wt")
+        set_headers(file_out_summary, False)
+        sort_out_pathways(graphs, edges, pathway_names, pathway_classes, '', file_out_summary)
+        file_out_summary.close()
+
+        # BY CONTIGS
+        name_output_summary = name_output + '_contigs.tsv'
+        file_out_summary = open(name_output_summary, "wt")
+        set_headers(file_out_summary, True)
+
         for contig in dict_KO_by_contigs:
             edges = dict_KO_by_contigs[contig]
-            sort_out_pathways(graphs, edges, pathway_names, pathway_classes, contig)
+            sort_out_pathways(graphs, edges, pathway_names, pathway_classes, contig, file_out_summary)
+        file_out_summary.close()

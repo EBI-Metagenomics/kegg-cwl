@@ -165,7 +165,7 @@ def recursive_parsing(G, dict_edges, unnecessary_nodes, expression, start_node, 
         symbol = field.split('_')[1]
 
         if symbol == '+':
-            cur_weight = 1./(len(cur_dict_levels[field])+1)
+            cur_weight = cur_weight/(len(cur_dict_levels[field])+1)
 
         separators = list(np.array(sorted(cur_dict_levels[field])))
         cur_sep = 0
@@ -232,7 +232,6 @@ def pathways_processing(input_file, outdir):
     graphs = {}  # dict of all graphs and their dict of edges (in tuple format)
     with open(input_file, 'r') as file_in:
         for line in file_in:
-
             line = line.strip().split(':')
             pathway = line[1]
             name = line[0]
@@ -263,7 +262,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", dest="input_file", help="Each line = pathway", required=True)
     parser.add_argument("-o", "--outdir", dest="outdir",
                         help="Relative path to directory where you want the output file to be stored (default: cwd)",
-                        default = ".")
+                        default=".")
 
     if len(sys.argv) == 1:
         parser.print_help()
